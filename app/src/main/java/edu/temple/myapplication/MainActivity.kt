@@ -6,11 +6,15 @@ import android.content.Intent
 import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.os.Message
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
     private var myBoundItem: Boolean = false
@@ -23,6 +27,15 @@ class MainActivity : AppCompatActivity() {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance.
             myBoundItem = true
+
+            var myHandler = object: Handler(Looper.getMainLooper()){
+
+                override fun handleMessage(msg: Message) {
+                    super.handleMessage(msg)
+                    findViewById<TextView>(R.id.textView).text = msg.what.toString()
+                }
+            }
+            theCurrService.TimerBinder().setHandler(myHandler)
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -44,37 +57,10 @@ class MainActivity : AppCompatActivity() {
         //change its text displaying such. Like stop should make it start,
         //once started it becomes pause, when pause become unpause and when unpause
         //becomes paused
-        var myStartButton = findViewById<Button>(R.id.startButton)
-
         //make handler display the countdown in activity
 
         Intent(this, TimerService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
-        }
-
-        myStartButton.setOnClickListener {
-            //check the service's state
-
-            if(!theCurrService.TimerBinder().isRunning){
-                //if it's not running, make it a run, and change the name
-                myStartButton.text = "pause"
-                theCurrService.TimerBinder().start(10)
-            }
-            else if(theCurrService.TimerBinder().paused){
-                //make it not paused
-                myStartButton.text = "pause"
-                theCurrService.TimerBinder().pause()
-            }
-            else if(!theCurrService.TimerBinder().paused){
-                myStartButton.text = "unpause"
-                theCurrService.TimerBinder().pause()
-            }
-        }
-        
-        findViewById<Button>(R.id.stopButton).setOnClickListener {
-            //stop her!!
-            myStartButton.text = "start"
-            theCurrService.TimerBinder().stop()
         }
     }
 
