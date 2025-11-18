@@ -7,11 +7,16 @@ import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.widget.Button
 
 class MainActivity : AppCompatActivity() {
     private var myBoundItem: Boolean = false
     private var theCurrService = TimerService()
+    private lateinit var myStartButton: MenuItem
+    private lateinit var myStopButton: MenuItem
 
     private val connection = object : ServiceConnection {
 
@@ -26,6 +31,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        //replace buttons w/menu item and action bar
+        //and change icon based on the logic instead of text
+        //by default, the action bar is not included so youll need to change the theme
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -76,5 +84,44 @@ class MainActivity : AppCompatActivity() {
         myBoundItem = false
 
         super.onDestroy()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        if(item == myStartButton) {
+            if(!theCurrService.TimerBinder().isRunning){
+                    //if it's not running, make it a run, and change the name
+                    item.setIcon(android.R.drawable.ic_media_pause)
+                    theCurrService.TimerBinder().start(10)
+            }
+            else if(theCurrService.TimerBinder().paused){
+                    //make it not paused
+                    item.setIcon(android.R.drawable.ic_media_pause)
+                    theCurrService.TimerBinder().pause()
+            }
+             else if(!theCurrService.TimerBinder().paused){
+                    item.setIcon(android.R.drawable.ic_media_play)
+                    theCurrService.TimerBinder().pause()
+             }
+            return true
+        }
+        if(item == myStopButton){
+            myStartButton.setIcon(android.R.drawable.ic_media_play)
+            theCurrService.TimerBinder().stop()
+
+            return true
+        }
+
+        return false
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.button_menu, menu)
+
+        myStartButton = menu.findItem(R.id.startButton)
+        myStopButton = menu.findItem(R.id.stopButton)
+
+        return true
     }
 }
